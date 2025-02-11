@@ -1,0 +1,1 @@
+A Bot to control and shiny hunt pokemon on the switch. It uses a RaspberryPi, a Arduino Leonardo, a CaptureCard and a Logic Converter + (a NintendoSwitch)
