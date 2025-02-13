@@ -1,49 +1,59 @@
 import cv2
 import numpy as np
-import os
-from PIL import Image
 
-# Print the current working directory
-print("Current working directory:", os.getcwd())
 
-# Construct the absolute path to the image file
-image_path = os.path.abspath("heart.png")
-print("Absolute path to the image file:", image_path)
-image_path = "heart.png"
+IMGS_DIRECTORY = "src/ImageDetection/Images"
+MainMenuImg = "MainMenu.png"
+SettingsMenuImg = "SettingsMenu.png"
 
-# Check if the file exists
-if not os.path.exists(image_path):
-    print("Error: The image file does not exist.")
-else:
-    print("The image file exists.")
+Main_path = IMGS_DIRECTORY + "/" + MainMenuImg
+Settings_path = IMGS_DIRECTORY + "/" + SettingsMenuImg
 
-    # Check file permissions
-    if os.access(image_path, os.R_OK):
-        print("Read permission: Yes")
-    else:
-        print("Read permission: No")
+main_img = cv2.imread(Main_path, cv2.IMREAD_UNCHANGED)
+settings_img = cv2.imread(Settings_path, cv2.IMREAD_UNCHANGED)
 
-    if os.access(image_path, os.W_OK):
-        print("Write permission: Yes")
-    else:
-        print("Write permission: No")
+cv2.imshow("Main Menu Image", main_img)
+cv2.waitKey()
+cv2.destroyAllWindows()
 
-    if os.access(image_path, os.X_OK):
-        print("Execute permission: Yes")
-    else:
-        print("Execute permission: No")
+cv2.imshow("Settings Menu Image", settings_img)
+cv2.waitKey()
+cv2.destroyAllWindows()
 
-    # Try loading the image with OpenCV
-    ArceusAppears_img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-    if ArceusAppears_img is None:
-        print("Error: Could not load image with OpenCV. Check the file path and name.")
-    else:
-        print("Image loaded successfully with OpenCV.")
+result = cv2.matchTemplate(main_img, settings_img, cv2.TM_CCOEFF_NORMED)
 
-    # Try loading the image with PIL
-    try:
-        pil_image = Image.open(image_path)
-        pil_image.verify()  # Verify that it is, in fact, an image
-        print("Image loaded successfully with PIL.")
-    except (IOError, SyntaxError) as e:
-        print("Error: Could not load image with PIL. The file might be corrupted.")
+cv2.imshow("Result", result)
+cv2.waitKey()
+cv2.destroyAllWindows()
+
+min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+
+print(max_val, max_loc)
+
+width = settings_img.shape[1]
+height = settings_img.shape[0]
+
+
+threshold = 0.32
+
+yloc, xloc = np.where(result >= threshold)
+
+print(len(xloc))
+
+rectangles = []
+for x, y in zip(xloc, yloc):
+    rectangles.append([int(x), int(y), int(width), int(height)])
+    rectangles.append([int(x), int(y), int(width), int(height)])
+
+print(len(rectangles))
+
+rectangles, weights = cv2.groupRectangles(rectangles, 1, 0.2)
+
+print(len(rectangles))
+
+for x, y, w, h in rectangles:
+    cv2.rectangle(main_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+cv2.imshow("Main Menu Image", main_img)
+cv2.waitKey()
+cv2.destroyAllWindows()
