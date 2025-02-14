@@ -1,59 +1,49 @@
+    """
+    Description: This module is used to detect objects in an image
+    
+    """
 import cv2
 import numpy as np
 
 
-IMGS_DIRECTORY = "src/ImageDetection/Images"
-MainMenuImg = "MainMenu.png"
-SettingsMenuImg = "SettingsMenu.png"
+def detect_object(base_img, object_img, threshold: float) -> list:
+    """
+    Detect the object in the frame
+    :param frame: The frame to detect the object in
+    :param object_img: The object image to detect
+    :param threshold: The threshold value
+    :return: The rectangles
+    """
 
-Main_path = IMGS_DIRECTORY + "/" + MainMenuImg
-Settings_path = IMGS_DIRECTORY + "/" + SettingsMenuImg
+    # Get the object image dimensions
+    object_height, object_width = object_img.shape[:2]
 
-main_img = cv2.imread(Main_path, cv2.IMREAD_UNCHANGED)
-settings_img = cv2.imread(Settings_path, cv2.IMREAD_UNCHANGED)
+    # Convert both images to grayscale if they are not already
+    if len(base_img.shape) >= 3:
+        frame_gray = cv2.cvtColor(base_img, cv2.COLOR_BGR2GRAY)
+    else:
+        frame_gray = base_img
 
-cv2.imshow("Main Menu Image", main_img)
-cv2.waitKey()
-cv2.destroyAllWindows()
+    if len(object_img.shape) >= 3:
+        object_img_gray = cv2.cvtColor(object_img, cv2.COLOR_BGR2GRAY)
+    else:
+        object_img_gray = object_img
 
-cv2.imshow("Settings Menu Image", settings_img)
-cv2.waitKey()
-cv2.destroyAllWindows()
+    # Perform template matching
+    result = cv2.matchTemplate(frame_gray, object_img_gray, cv2.TM_CCOEFF_NORMED)
 
-result = cv2.matchTemplate(main_img, settings_img, cv2.TM_CCOEFF_NORMED)
+    # Get the locations where the threshold is met
+    yloc, xloc = np.where(result >= threshold)
 
-cv2.imshow("Result", result)
-cv2.waitKey()
-cv2.destroyAllWindows()
+    # Create a list to store the rectangles
+    rectangles = []
 
-min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    # Create rectangles for the detected objects
+    for x, y in zip(xloc, yloc):
+        rectangles.append([int(x), int(y), int(object_width), int(object_height)])
+        rectangles.append([int(x), int(y), int(object_width), int(object_height)])
 
-print(max_val, max_loc)
+    # Group the rectangles
+    rectangles, weights = cv2.groupRectangles(rectangles, 1, 0.2)
 
-width = settings_img.shape[1]
-height = settings_img.shape[0]
-
-
-threshold = 0.32
-
-yloc, xloc = np.where(result >= threshold)
-
-print(len(xloc))
-
-rectangles = []
-for x, y in zip(xloc, yloc):
-    rectangles.append([int(x), int(y), int(width), int(height)])
-    rectangles.append([int(x), int(y), int(width), int(height)])
-
-print(len(rectangles))
-
-rectangles, weights = cv2.groupRectangles(rectangles, 1, 0.2)
-
-print(len(rectangles))
-
-for x, y, w, h in rectangles:
-    cv2.rectangle(main_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-cv2.imshow("Main Menu Image", main_img)
-cv2.waitKey()
-cv2.destroyAllWindows()
+    return rectangles
