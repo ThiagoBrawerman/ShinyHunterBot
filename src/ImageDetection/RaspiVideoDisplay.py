@@ -10,13 +10,13 @@ from VideoProcessing import (
 )
 
 # The directory of the images
-IMGS_DIRECTORY = "src/ImageDetection/Images"
+IMGS_DIRECTORY = "Images"
 
 # The device number depends on the device and its output
-DEVICE_NUMBER = 1  # 1 for the usb of the PC
+DEVICE_NUMBER = 0  # 1 for the usb of the PC 0 for the arduino usb
 
 # Can Display the images?
-CAN_DISPLAY = True
+CAN_DISPLAY = False
 
 # Color palette
 
@@ -29,12 +29,11 @@ COLORS = [
     (143, 0, 255),
 ]
 
-
 # Create a VideoCapture object
 cap = cv2.VideoCapture()
 
 # Open the video capture device
-cap.open(DEVICE_NUMBER, cv2.CAP_DSHOW)
+cap.open(DEVICE_NUMBER)  # cv2.CAP_DSHOW removed for compatibility with Raspberry Pi
 
 # List to store the FPS values
 fps_list = []
@@ -53,7 +52,7 @@ while cap.isOpened():
 
     # Update the list of the number of detected objects in each image
     detected_list = update_img_detected_list(img_list, img, 0.9)
-
+    print(detected_list)
     # Current tick count
     new_tick_count = cv2.getTickCount()
 
