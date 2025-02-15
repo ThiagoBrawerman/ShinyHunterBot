@@ -1,47 +1,40 @@
-"""_summary_
-"""
+import cv2  # type: ignore
 
-import cv2  # Import the OpenCV library
-import numpy as np  # Import the NumPy library
-from ImageDetection import detect_object
-from VideoDisplay import display_fps, object_display
 
+from VideoProcessing import (
+    calculate_fps,
+    display_fps,
+    display_object,
+    generate_img_list,
+    update_img_detected_list,
+)
+
+# The directory of the images
 IMGS_DIRECTORY = "src/ImageDetection/Images"
-MainMenuImg = "MainMenu.png"
-SettingsMenuImg = "SettingsMenu.png"
-
-Main_path = IMGS_DIRECTORY + "/" + MainMenuImg
-Settings_path = IMGS_DIRECTORY + "/" + SettingsMenuImg
-
-main_img = cv2.imread(Main_path, cv2.IMREAD_UNCHANGED)
-settings_img = cv2.imread(Settings_path, cv2.IMREAD_UNCHANGED)
-
-
-cap = cv2.VideoCapture()  # Create a VideoCapture object
 
 # The device number depends on the device and its output
 DEVICE_NUMBER = 1  # 1 for the usb of the PC
 
+# Can Display the images?
+CAN_DISPLAY = True
+
+# Color palette
+
+COLORS = [
+    (1, 190, 254),
+    (255, 221, 0),
+    (255, 125, 0),
+    (255, 0, 109),
+    (173, 255, 2),
+    (143, 0, 255),
+]
+
+
+# Create a VideoCapture object
+cap = cv2.VideoCapture()
+
 # Open the video capture device
 cap.open(DEVICE_NUMBER, cv2.CAP_DSHOW)
-
-
-def calculate_fps(prev_frame_time: float, new_frame_time: float) -> float:
-    """
-    Calculate the frames per second (FPS)
-    :param prev_frame_time: The time when the previous frame was processed
-    :param new_frame_time: The time when the current frame was processed
-    :return: The fps value
-    """
-
-    # Calculate the time difference between the current and previous frame
-    time_difference = (new_frame_time - prev_frame_time) / cv2.getTickFrequency()
-
-    # Calculate the FPS
-    fps = 1 / time_difference if time_difference > 0 else 0
-
-    return fps
-
 
 # List to store the FPS values
 fps_list = []
@@ -49,13 +42,17 @@ fps_list = []
 # The initial tick count
 last_tick_count = cv2.getTickCount()
 
+img_list = generate_img_list(IMGS_DIRECTORY)
+detected_list = []
+
 # Loop to read the frames from the video capture device
 while cap.isOpened():
 
     # Read the frame from the video capture device
     ret, img = cap.read()
 
-    object_display(img, detect_object(img, main_img, 0.8))
+    # Update the list of the number of detected objects in each image
+    detected_list = update_img_detected_list(img_list, img, 0.9)
 
     # Current tick count
     new_tick_count = cv2.getTickCount()
@@ -73,15 +70,24 @@ while cap.isOpened():
     # Calculate the average FPS
     avg_fps = sum(fps_list) / len(fps_list)
 
-    # Display the FPS on the frame
-    display_fps(img, avg_fps)
+    # If the user wants to display the images
+    if CAN_DISPLAY:
 
-    # Display the frame
-    cv2.imshow("frame", img)
+        # Display the detected objects on the frame
+        for i, val in enumerate(img_list):
+            display_object(
+                img,
+                img_list[i][0],
+                detected_list[i],
+                (COLORS[i][2], COLORS[i][1], COLORS[i][0]),
+            )
+
+        # Display the FPS on the frame
+        display_fps(img, avg_fps)
+
+        # Display the frame
+        cv2.imshow("frame", img)
 
     # Break the loop if the user presses the 'q' key
     if cv2.waitKey(2) & 0xFF == ord("q"):
         break
-
-cap.release()  # Release the video capture device
-cv2.destroyAllWindows()  # Close the window

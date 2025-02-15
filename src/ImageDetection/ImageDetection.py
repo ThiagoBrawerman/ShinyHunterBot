@@ -1,9 +1,10 @@
-    """
+"""
     Description: This module is used to detect objects in an image
     
-    """
-import cv2
-import numpy as np
+"""
+
+import cv2  # type: ignore
+import numpy as np  # type: ignore
 
 
 def detect_object(base_img, object_img, threshold: float) -> list:
